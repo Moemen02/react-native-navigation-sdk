@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.13.0](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.12.2...v0.13.0) (2026-01-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* Updates setDestinations call signature. DisplayOptions, RoutingOptions and RouteTokenOptions are now optional named parameters.
+
+### Features
+
+* support route tokens ([#528](https://github.com/googlemaps/react-native-navigation-sdk/issues/528)) ([bcf3679](https://github.com/googlemaps/react-native-navigation-sdk/commit/bcf367940382aa412931be6351c2ffcace446640))
+
+## [0.12.2](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.12.1...v0.12.2) (2026-01-16)
+
+
+### Bug Fixes
+
+* view lifecycle handling ([#524](https://github.com/googlemaps/react-native-navigation-sdk/issues/524)) ([2f3d862](https://github.com/googlemaps/react-native-navigation-sdk/commit/2f3d862a2c44be1d92155b0ccc84f307bc5b1dab))
+
 ## [0.12.1](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.12.0...v0.12.1) (2025-12-15)
 
 

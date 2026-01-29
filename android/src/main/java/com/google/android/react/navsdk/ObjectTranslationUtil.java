@@ -28,6 +28,7 @@ import com.google.android.libraries.mapsplatform.turnbyturn.model.Lane;
 import com.google.android.libraries.mapsplatform.turnbyturn.model.LaneDirection;
 import com.google.android.libraries.mapsplatform.turnbyturn.model.StepInfo;
 import com.google.android.libraries.navigation.AlternateRoutesStrategy;
+import com.google.android.libraries.navigation.CustomRoutesOptions;
 import com.google.android.libraries.navigation.DisplayOptions;
 import com.google.android.libraries.navigation.NavigationRoadStretchRenderingData;
 import com.google.android.libraries.navigation.RouteSegment;
@@ -174,8 +175,9 @@ public class ObjectTranslationUtil {
     }
 
     if (map.containsKey("travelMode")) {
-      options.travelMode(
-          CollectionUtil.getInt("travelMode", map, RoutingOptions.TravelMode.DRIVING));
+      int travelModeJsValue =
+          CollectionUtil.getInt("travelMode", map, RoutingOptions.TravelMode.DRIVING);
+      options.travelMode(EnumTranslationUtil.getTravelModeFromJsValue(travelModeJsValue));
     }
 
     if (map.containsKey("routingStrategy")) {
@@ -194,6 +196,21 @@ public class ObjectTranslationUtil {
     }
 
     return options;
+  }
+
+  public static CustomRoutesOptions getCustomRoutesOptionsFromMap(Map map)
+      throws IllegalStateException {
+    String routeToken = CollectionUtil.getString("routeToken", map);
+
+    CustomRoutesOptions.Builder builder = CustomRoutesOptions.builder().setRouteToken(routeToken);
+
+    if (map.containsKey("travelMode")) {
+      int travelModeJsValue =
+          CollectionUtil.getInt("travelMode", map, RoutingOptions.TravelMode.DRIVING);
+      builder.setTravelMode(EnumTranslationUtil.getTravelModeFromJsValue(travelModeJsValue));
+    }
+
+    return builder.build();
   }
 
   public static LatLng getLatLngFromMap(Map map) {
