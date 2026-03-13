@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.14.2](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.14.1...v0.14.2) (2026-03-13)
+
+
+### Features
+
+* upgrade iOS Nav SDK to 10.10.0 and Android to 7.4.0 ([#543](https://github.com/googlemaps/react-native-navigation-sdk/issues/543)) ([1231c36](https://github.com/googlemaps/react-native-navigation-sdk/commit/1231c361ac7416c06fe0b00ac1067b5d901ece03))
+
+## [0.14.1](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.14.0...v0.14.1) (2026-02-15)
+
+
+### Bug Fixes
+
+* release build crash with NoSuchMethodError for getNavInfoLiveData ([#536](https://github.com/googlemaps/react-native-navigation-sdk/issues/536)) ([d56c96b](https://github.com/googlemaps/react-native-navigation-sdk/commit/d56c96b112f5946e8764362bac875fc516b5ceb1))
+
+## [0.14.0](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.13.0...v0.14.0) (2026-02-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **Legacy Architecture Removed:** Support for the legacy React Native architecture has been removed. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+* **View Event Handlers as Props:** Instead of using `mapViewCallbacks` and `navigationViewCallbacks` wrapper objects, event handlers are now passed directly as first-class view props. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+* **View Flags as Props:** View flags have been moved from `viewControllers` to view props. For example, the `headerEnabled` state can now be managed directly via a view prop, instead of calling `navigationViewController.setHeaderEnabled(value)`. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+* **Listener Configuration:** Migrate from configuring listeners via one combined setter call to setting each listener via its own dedicated setter. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+* **Minimum Kotlin Version:** Updated the minimum Kotlin version to 2.2.10. Recommended Android Gradle Plugin (AGP) is now 8.10.0 and Gradle is now 8.11.1. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+* **Minimum React Native Version:** Support for React Native versions below 0.79.x has been dropped. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+
+### Features
+
+* **New Architecture Support:** Adds support for the new React Native architecture using codegen to generate the native interop layer for TurboModules and Fabric views. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439)) ([355f16a](https://github.com/googlemaps/react-native-navigation-sdk/commit/355f16a6b22ea3957eadf49a1cde100318e32734))
+* **Android SDK Upgrade:** Upgraded Android Navigation SDK from `7.1.0` to `7.3.0`. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+* **iOS SDK Upgrade:** Upgraded iOS Navigation SDK from `10.6.0` to `10.7.0`. ([#439](https://github.com/googlemaps/react-native-navigation-sdk/issues/439))
+
 ## [0.13.0](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.12.2...v0.13.0) (2026-01-22)
 
 

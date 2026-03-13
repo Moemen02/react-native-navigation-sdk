@@ -23,6 +23,7 @@ interface OverlayModalProps {
   closeOverlay: () => void;
   children: ReactNode;
   height?: number;
+  contentPaddingBottom?: number;
 }
 
 const OverlayModal: React.FC<OverlayModalProps> = ({
@@ -30,6 +31,7 @@ const OverlayModal: React.FC<OverlayModalProps> = ({
   closeOverlay,
   children,
   height: height,
+  contentPaddingBottom = 20,
 }) => {
   const modalContentStyle = [
     styles.modalContent,
@@ -51,9 +53,9 @@ const OverlayModal: React.FC<OverlayModalProps> = ({
             showsVerticalScrollIndicator={true}
             persistentScrollbar={true}
             style={styles.scrollContainer}
-            contentContainerStyle={styles.scrollContentContainer}
+            contentContainerStyle={{ paddingBottom: contentPaddingBottom }}
           >
-            <View style={styles.scrollContent}>{children}</View>
+            {children}
           </ScrollView>
           <View style={styles.closeButtonContainer}>
             <ExampleAppButton
@@ -92,13 +94,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   scrollContainer: {
-    flexGrow: 1,
-  },
-  scrollContentContainer: {
-    flexGrow: 1,
-    minHeight: '100%',
-  },
-  scrollContent: {
     flex: 1,
   },
   closeButtonContainer: {

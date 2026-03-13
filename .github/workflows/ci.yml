@@ -52,7 +52,7 @@ jobs:
       - name: Check Objective-C formatting
         run: ./scripts/format-objc.sh --check
 
-  check-java-formatting:
+  check-java-and-kotlin-formatting:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -83,6 +83,17 @@ jobs:
 
       - name: Check Java formatting
         run: ./scripts/format-java.sh --check
+
+      - name: Download ktfmt
+        run: |
+          KTFMT_VERSION=0.61
+          KTFMT_URL=https://github.com/facebook/ktfmt/releases/download/v${KTFMT_VERSION}/ktfmt-${KTFMT_VERSION}-with-dependencies.jar
+          mkdir -p $HOME/ktfmt
+          curl -fL -o $HOME/ktfmt/ktfmt.jar $KTFMT_URL
+
+      - name: Check Kotlin formatting
+        run: |
+          find . -name "*.kt" -not -path "*/build/*" | xargs java -jar $HOME/ktfmt/ktfmt.jar --google-style --dry-run --set-exit-if-changed
 
   test:
     runs-on: ubuntu-latest
@@ -178,12 +189,22 @@ jobs:
     timeout-minutes: 45
     env:
       TURBO_CACHE_DIR: .turbo/ios
+    # Fix github runner issues with xcode 26 toolchains
+    # https://github.com/actions/runner-images/issues/13135#issuecomment-3722044150
     steps:
+      - name: Set Xcode Toolchain
+        shell: bash
+        run: |
+          echo "TOOLCHAINS=com.apple.dt.toolchain.XcodeDefault" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup
         uses: ./.github/actions/setup
+      
+      - name: Select XCode 26.3
+        run: sudo xcode-select -s '/Applications/Xcode_26.3.0.app/Contents/Developer'
 
       - name: Cache turborepo for iOS
         uses: actions/cache@v3
