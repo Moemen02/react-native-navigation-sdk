@@ -15,15 +15,18 @@ package com.google.android.react.navsdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.util.Log;
 import androidx.core.util.Supplier;
 import com.facebook.react.bridge.UiThreadUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.CameraPerspective;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.FollowMyLocationOptions;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -36,19 +39,13 @@ import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 
 public class MapViewController implements INavigationViewControllerProperties {
+  private static final String TAG = "MapViewController";
   private GoogleMap mGoogleMap;
   private Supplier<Activity> activitySupplier;
   private INavigationViewCallback mNavigationViewCallback;
@@ -66,8 +63,6 @@ public class MapViewController implements INavigationViewControllerProperties {
   private final Map<String, String> polygonNativeIdToEffectiveId = new HashMap<>();
   private final Map<String, String> groundOverlayNativeIdToEffectiveId = new HashMap<>();
   private final Map<String, String> circleNativeIdToEffectiveId = new HashMap<>();
-
-  private String style = "";
 
   // Zoom level preferences (-1 means use map's current value)
   private Float minZoomLevelPreference = null;
@@ -770,25 +765,20 @@ public class MapViewController implements INavigationViewControllerProperties {
     return groundOverlayMap;
   }
 
-  public void setMapStyle(String url) {
-    Executors.newSingleThreadExecutor()
-        .execute(
-            () -> {
-              try {
-                style = fetchJsonFromUrl(url);
-              } catch (IOException e) {
-                throw new RuntimeException(e);
-              }
-
-              Activity activity = activitySupplier.get();
-              if (activity != null) {
-                activity.runOnUiThread(
-                    () -> {
-                      MapStyleOptions options = new MapStyleOptions(style);
-                      mGoogleMap.setMapStyle(options);
-                    });
-              }
-            });
+  public void setMapStyle(String styleJson) {
+    Activity activity = activitySupplier.get();
+    if (activity != null) {
+      activity.runOnUiThread(
+          () -> {
+            if (styleJson == null || styleJson.isEmpty()) {
+              // Reset to default map style
+              mGoogleMap.setMapStyle(null);
+            } else {
+              MapStyleOptions options = new MapStyleOptions(styleJson);
+              mGoogleMap.setMapStyle(options);
+            }
+          });
+    }
   }
 
   /** Moves the position of the camera to the specified location. */
@@ -897,23 +887,35 @@ public class MapViewController implements INavigationViewControllerProperties {
       return;
     }
 
-    // Get the effective max zoom for comparison
-    float maxZoom =
+    minZoomLevelPreference = minZoomLevel;
+
+    // Reset both preferences first so the new min/max pair is always applied
+    // atomically. Without this, Fabric can deliver minZoomLevel and maxZoomLevel
+    // prop updates in any order, causing a transient state where min > max.
+    mGoogleMap.resetMinMaxZoomPreference();
+
+    float effectiveMin = (minZoomLevel < 0.0f) ? mGoogleMap.getMinZoomLevel() : minZoomLevel;
+    float effectiveMax =
         (maxZoomLevelPreference != null && maxZoomLevelPreference >= 0.0f)
             ? maxZoomLevelPreference
             : mGoogleMap.getMaxZoomLevel();
 
-    // Validate that min is not greater than max (unless using -1 sentinel)
-    if (minZoomLevel >= 0.0f && minZoomLevel > maxZoom) {
-      throw new IllegalArgumentException(
-          "Minimum zoom level cannot be greater than maximum zoom level");
+    if (effectiveMin > effectiveMax) {
+      Log.w(
+          TAG,
+          "minZoomLevel ("
+              + effectiveMin
+              + ") is greater than maxZoomLevel ("
+              + effectiveMax
+              + "). Ignoring zoom level constraints.");
+      return;
     }
 
-    minZoomLevelPreference = minZoomLevel;
-
-    // Use map's current minZoomLevel if -1 is provided
-    float effectiveMin = (minZoomLevel < 0.0f) ? mGoogleMap.getMinZoomLevel() : minZoomLevel;
     mGoogleMap.setMinZoomPreference(effectiveMin);
+
+    if (maxZoomLevelPreference != null) {
+      mGoogleMap.setMaxZoomPreference(effectiveMax);
+    }
   }
 
   @Override
@@ -922,23 +924,35 @@ public class MapViewController implements INavigationViewControllerProperties {
       return;
     }
 
-    // Get the effective min zoom for comparison
-    float minZoom =
+    maxZoomLevelPreference = maxZoomLevel;
+
+    // Reset both preferences first so the new min/max pair is always applied
+    // atomically. Without this, Fabric can deliver minZoomLevel and maxZoomLevel
+    // prop updates in any order, causing a transient state where min > max.
+    mGoogleMap.resetMinMaxZoomPreference();
+
+    float effectiveMax = (maxZoomLevel < 0.0f) ? mGoogleMap.getMaxZoomLevel() : maxZoomLevel;
+    float effectiveMin =
         (minZoomLevelPreference != null && minZoomLevelPreference >= 0.0f)
             ? minZoomLevelPreference
             : mGoogleMap.getMinZoomLevel();
 
-    // Validate that max is not less than min (unless using -1 sentinel)
-    if (maxZoomLevel >= 0.0f && maxZoomLevel < minZoom) {
-      throw new IllegalArgumentException(
-          "Maximum zoom level cannot be less than minimum zoom level");
+    if (effectiveMin > effectiveMax) {
+      Log.w(
+          TAG,
+          "minZoomLevel ("
+              + effectiveMin
+              + ") is greater than maxZoomLevel ("
+              + effectiveMax
+              + "). Ignoring zoom level constraints.");
+      return;
     }
 
-    maxZoomLevelPreference = maxZoomLevel;
-
-    // Use map's current maxZoomLevel if -1 is provided
-    float effectiveMax = (maxZoomLevel < 0.0f) ? mGoogleMap.getMaxZoomLevel() : maxZoomLevel;
     mGoogleMap.setMaxZoomPreference(effectiveMax);
+
+    if (minZoomLevelPreference != null) {
+      mGoogleMap.setMinZoomPreference(effectiveMin);
+    }
   }
 
   public void setZoomGesturesEnabled(boolean enabled) {
@@ -1019,44 +1033,32 @@ public class MapViewController implements INavigationViewControllerProperties {
       return;
     }
 
+    minZoomLevelPreference = null;
+    maxZoomLevelPreference = null;
     mGoogleMap.resetMinMaxZoomPreference();
   }
 
   @SuppressLint("MissingPermission")
-  public void setFollowingPerspective(int jsValue) {
+  public void setFollowingPerspective(int jsValue, Float zoomLevel) {
     if (mGoogleMap == null) {
       return;
     }
 
-    mGoogleMap.followMyLocation(EnumTranslationUtil.getCameraPerspectiveFromJsValue(jsValue));
+    @CameraPerspective
+    int perspective = EnumTranslationUtil.getCameraPerspectiveFromJsValue(jsValue);
+
+    if (zoomLevel != null) {
+      FollowMyLocationOptions options =
+          FollowMyLocationOptions.builder().setZoomLevel(zoomLevel).build();
+      mGoogleMap.followMyLocation(perspective, options);
+    } else {
+      mGoogleMap.followMyLocation(perspective);
+    }
   }
 
   public void setPadding(int top, int left, int bottom, int right) {
     if (mGoogleMap != null) {
       mGoogleMap.setPadding(left, top, right, bottom);
-    }
-  }
-
-  private String fetchJsonFromUrl(String urlString) throws IOException {
-    URL url = new URL(urlString);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-    connection.setRequestMethod("GET");
-
-    int responseCode = connection.getResponseCode();
-    if (responseCode == HttpURLConnection.HTTP_OK) {
-      InputStream inputStream = connection.getInputStream();
-      BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-      StringBuilder stringBuilder = new StringBuilder();
-      String line;
-      while ((line = reader.readLine()) != null) {
-        stringBuilder.append(line);
-      }
-      reader.close();
-      inputStream.close();
-      return stringBuilder.toString();
-    } else {
-      // Handle error response
-      throw new IOException("Error response: " + responseCode);
     }
   }
 

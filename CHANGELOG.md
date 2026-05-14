@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.15.2](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.15.1...v0.15.2) (2026-05-03)
+
+
+### Features
+
+* internal usage attribution ID ([#581](https://github.com/googlemaps/react-native-navigation-sdk/issues/581)) ([c754ade](https://github.com/googlemaps/react-native-navigation-sdk/commit/c754ade4ffbf78ecc6ef80407195b871cb12203c))
+
+## [0.15.1](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.15.0...v0.15.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* stop navinfo forwarding on cleanup ([#566](https://github.com/googlemaps/react-native-navigation-sdk/issues/566)) ([436716c](https://github.com/googlemaps/react-native-navigation-sdk/commit/436716cafefb8ef4acfb5a5a9bc37bf84b0da32f))
+
+## [0.15.0](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.14.3...v0.15.0) (2026-04-21)
+
+
+### ⚠ BREAKING CHANGES
+
+* continueToNextDestination() now returns ContinueToNextDestinationResponse containing waypoint and routeStatus
+* mapStyle prop on Android now expects the JSON styling string directly, matching iOS behavior. Previously Android incorrectly expected a URL to a JSON style file.
+
+### Features
+
+* upgrade Nav SDKs to Android 7.6.0 and iOS 10.12.0 ([#571](https://github.com/googlemaps/react-native-navigation-sdk/issues/571)) ([8292ae1](https://github.com/googlemaps/react-native-navigation-sdk/commit/8292ae145a11c47f6a8b33dbeac564cc28a00c43))
+
+
+### Bug Fixes
+
+* cross platform mapStyle prop handling ([#565](https://github.com/googlemaps/react-native-navigation-sdk/issues/565)) ([54c25c6](https://github.com/googlemaps/react-native-navigation-sdk/commit/54c25c6595c00d27a5f1d45e6a1732fb8bd7e013))
+* prevent crash on min/max zoom changes and fix zoom on navigation ([#572](https://github.com/googlemaps/react-native-navigation-sdk/issues/572)) ([92cecf8](https://github.com/googlemaps/react-native-navigation-sdk/commit/92cecf8def251ad9fff9fc6ab5ec7e45e0e52350))
+* prevent crash when tapping marker without snippet on iOS ([#568](https://github.com/googlemaps/react-native-navigation-sdk/issues/568)) ([72069ca](https://github.com/googlemaps/react-native-navigation-sdk/commit/72069caf99a8ef7c8a4c2851e468145d1c645232))
+* resolve race condition in location listener causing NullPointerException ([#569](https://github.com/googlemaps/react-native-navigation-sdk/issues/569)) ([11f79ae](https://github.com/googlemaps/react-native-navigation-sdk/commit/11f79aee13d2a89179ea2ecad79614d7b3fad7ae))
+
+## [0.14.3](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.14.2...v0.14.3) (2026-04-08)
+
+
+### Features
+
+* upgrade Navigation SDK for Android to 7.5.0 ([#557](https://github.com/googlemaps/react-native-navigation-sdk/issues/557)) ([f472ed3](https://github.com/googlemaps/react-native-navigation-sdk/commit/f472ed379d73b31d6c6990030ecc59e08ede8652))
+
 ## [0.14.2](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.14.1...v0.14.2) (2026-03-13)
 
 

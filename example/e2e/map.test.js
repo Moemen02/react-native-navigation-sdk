@@ -82,4 +82,18 @@ describe('Map view tests', () => {
     await expectNoErrors();
     await expectSuccess();
   });
+
+  it('MT09 - test setting map style via JSON', async () => {
+    await selectTestByName('testMapStyle');
+    await waitForTestToFinish();
+    await expectNoErrors();
+    await expectSuccess();
+  });
+
+  it('MT10 - test min and max zoom level constraints', async () => {
+    await selectTestByName('testMinMaxZoomLevels');
+    await waitForTestToFinish();
+    await expectNoErrors();
+    await expectSuccess();
+  });
 });

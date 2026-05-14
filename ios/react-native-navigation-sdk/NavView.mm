@@ -221,7 +221,11 @@ static const std::shared_ptr<const NavViewProps> kDefaultNavViewProps =
   // Update map style
   if (previousViewProps.mapStyle != newViewProps.mapStyle) {
     NSString *jsonString = [NSString stringWithUTF8String:newViewProps.mapStyle.c_str()];
-    GMSMapStyle *style = [GMSMapStyle styleWithJSONString:jsonString error:nil];
+    GMSMapStyle *style = nil;
+    if (jsonString.length > 0) {
+      style = [GMSMapStyle styleWithJSONString:jsonString error:nil];
+    }
+    // Setting nil resets to default map style
     [_viewController setMapStyle:style];
   }
 
@@ -334,7 +338,7 @@ static const std::shared_ptr<const NavViewProps> kDefaultNavViewProps =
       marker.title != nil ? [marker.title UTF8String] : "",
       marker.opacity,
       marker.rotation,
-      [marker.snippet UTF8String],
+      marker.snippet != nil ? [marker.snippet UTF8String] : "",
       (int)marker.zIndex};
   self.eventEmitter.onMarkerInfoWindowTapped(result);
 }
@@ -346,7 +350,7 @@ static const std::shared_ptr<const NavViewProps> kDefaultNavViewProps =
       marker.title != nil ? [marker.title UTF8String] : "",
       marker.opacity,
       marker.rotation,
-      [marker.snippet UTF8String],
+      marker.snippet != nil ? [marker.snippet UTF8String] : "",
       (int)marker.zIndex};
   self.eventEmitter.onMarkerClick(result);
 }

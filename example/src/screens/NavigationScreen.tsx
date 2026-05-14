@@ -46,9 +46,11 @@ import NavigationActionPath, {
   ActionPathStep,
 } from '../controls/NavigationActionPath';
 import OverlayModal from '../helpers/overlayModal';
+import { handleContinueToNextDestination } from '../helpers/navigationUtils';
 import { showSnackbar, Snackbar } from '../helpers/snackbar';
 import { CommonStyles, MapStyles } from '../styles/components';
 import { MapStylingOptions } from '../styles/mapStyling';
+import { NIGHT_MODE_STYLE } from '../styles/mapStyles';
 import usePermissions from '../checkPermissions';
 
 enum OverlayType {
@@ -91,6 +93,13 @@ const NavigationScreen = () => {
   const [tiltGesturesEnabled, setTiltGesturesEnabled] = useState(true);
   const [zoomControlsEnabled, setZoomControlsEnabled] = useState(true);
   const [zoomGesturesEnabled, setZoomGesturesEnabled] = useState(true);
+
+  // Custom map style (JSON string)
+  const [mapStyle, setMapStyle] = useState<string | undefined>(undefined);
+
+  const handleMapStyleEnabledChange = (enabled: boolean) => {
+    setMapStyle(enabled ? NIGHT_MODE_STYLE : undefined);
+  };
 
   // Navigation UI state
   const [tripProgressBarEnabled, setTripProgressBarEnabled] = useState(false);
@@ -183,14 +192,19 @@ const NavigationScreen = () => {
 
   // Set up callbacks that depend on navigationController
   useEffect(() => {
-    setOnArrival((event: ArrivalEvent) => {
+    setOnArrival(async (event: ArrivalEvent) => {
       if (event.isFinalDestination) {
         navigationController.stopGuidance();
+        showSnackbar('Arrived at final destination');
       } else {
-        navigationController.continueToNextDestination();
-        navigationController.startGuidance();
+        const response = await navigationController.continueToNextDestination();
+        if (
+          await handleContinueToNextDestination(navigationController, response)
+        ) {
+          navigationController.startGuidance();
+          showSnackbar('Arrived, continuing to next destination');
+        }
       }
-      showSnackbar('Arrived');
     });
 
     setOnRemainingTimeOrDistanceChanged(timeAndDistance => {
@@ -349,6 +363,7 @@ const NavigationScreen = () => {
         tiltGesturesEnabled={tiltGesturesEnabled}
         zoomControlsEnabled={zoomControlsEnabled}
         zoomGesturesEnabled={zoomGesturesEnabled}
+        mapStyle={mapStyle}
         navigationUIEnabledPreference={0} // 0 = AUTOMATIC
         tripProgressBarEnabled={tripProgressBarEnabled}
         trafficPromptsEnabled={trafficPromptsEnabled}
@@ -443,6 +458,8 @@ const NavigationScreen = () => {
             onZoomControlsEnabledChange={setZoomControlsEnabled}
             zoomGesturesEnabled={zoomGesturesEnabled}
             onZoomGesturesEnabledChange={setZoomGesturesEnabled}
+            mapStyleEnabled={mapStyle !== undefined}
+            onMapStyleEnabledChange={handleMapStyleEnabledChange}
           />
         </OverlayModal>
       )}

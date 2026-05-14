@@ -74,13 +74,14 @@ public class NavModule extends NativeNavModuleSpec
   private NavViewManager mNavViewManager;
   private final CopyOnWriteArrayList<NavigationReadyListener> mNavigationReadyListeners =
       new CopyOnWriteArrayList<>();
-  private boolean mIsListeningRoadSnappedLocation = false;
+  private volatile boolean mIsListeningRoadSnappedLocation = false;
   private LocationListener mLocationListener;
   private Navigator.ArrivalListener mArrivalListener;
   private Navigator.RouteChangedListener mRouteChangedListener;
   private Navigator.TrafficUpdatedListener mTrafficUpdatedListener;
   private Navigator.ReroutingListener mReroutingListener;
   private Navigator.RemainingTimeOrDistanceChangedListener mRemainingTimeOrDistanceChangedListener;
+  private Observer<NavInfo> mNavInfoObserver;
 
   private @Navigator.TaskRemovedBehavior int taskRemovedBehaviour =
       Navigator.TaskRemovedBehavior.CONTINUE_SERVICE;
@@ -167,8 +168,6 @@ public class NavModule extends NativeNavModuleSpec
     }
 
     mIsListeningRoadSnappedLocation = false;
-    removeLocationListener();
-    removeNavigationListeners();
     mWaypoints.clear();
 
     for (NavigationReadyListener listener : mNavigationReadyListeners) {
@@ -176,10 +175,22 @@ public class NavModule extends NativeNavModuleSpec
     }
 
     final Navigator navigator = mNavigator;
+
     UiThreadUtil.runOnUiThread(
         () -> {
-          navigator.clearDestinations();
+          // Remove listeners on UI thread to serialize with callback dispatch.
+          // This reduces the chance of triggering a race condition in the Navigation SDK
+          // where callbacks may still be in-flight during removal.
+          removeLocationListener();
+          removeNavigationListeners();
+          removeNavInfoObserver();
+          // Null out fields after listener removal so the removal methods
+          // can still access mNavigator and mRoadSnappedLocationProvider.
+          mNavigator = null;
+          mRoadSnappedLocationProvider = null;
+          NavForwardingManager.stopNavForwarding(navigator, this);
           navigator.stopGuidance();
+          navigator.clearDestinations();
           navigator.getSimulator().unsetUserLocation();
           promise.resolve(true);
         });
@@ -276,14 +287,15 @@ public class NavModule extends NativeNavModuleSpec
     initializeNavigationApi();
 
     // Observe live data for nav info updates.
-    Observer<NavInfo> navInfoObserver = this::showNavInfo;
-
+    // Remove any existing observer first to prevent duplicates after cleanup+reinit cycles.
     UiThreadUtil.runOnUiThread(
         () -> {
+          removeNavInfoObserver();
+          mNavInfoObserver = this::showNavInfo;
           final Activity currentActivity = getReactApplicationContext().getCurrentActivity();
           if (currentActivity != null) {
             NavInfoReceivingService.getNavInfoLiveData()
-                .observe((LifecycleOwner) currentActivity, navInfoObserver);
+                .observe((LifecycleOwner) currentActivity, mNavInfoObserver);
           }
         });
   }
@@ -415,7 +427,7 @@ public class NavModule extends NativeNavModuleSpec
     if (isEnabled) {
       NavForwardingManager.startNavForwarding(mNavigator, currentActivity, this);
     } else {
-      NavForwardingManager.stopNavForwarding(mNavigator, currentActivity, this);
+      NavForwardingManager.stopNavForwarding(mNavigator, this);
     }
   }
 
@@ -522,6 +534,13 @@ public class NavModule extends NativeNavModuleSpec
     if (mRemainingTimeOrDistanceChangedListener != null) {
       mNavigator.removeRemainingTimeOrDistanceChangedListener(
           mRemainingTimeOrDistanceChangedListener);
+    }
+  }
+
+  private void removeNavInfoObserver() {
+    if (mNavInfoObserver != null) {
+      NavInfoReceivingService.getNavInfoLiveData().removeObserver(mNavInfoObserver);
+      mNavInfoObserver = null;
     }
   }
 
@@ -670,8 +689,14 @@ public class NavModule extends NativeNavModuleSpec
     if (!ensureNavigatorAvailable(promise)) {
       return;
     }
-    mNavigator.continueToNextDestination();
-    promise.resolve(true);
+    Waypoint nextWaypoint = mNavigator.continueToNextDestination();
+    WritableMap result = Arguments.createMap();
+    if (nextWaypoint != null) {
+      result.putMap("waypoint", ObjectTranslationUtil.getMapFromWaypoint(nextWaypoint));
+    } else {
+      result.putNull("waypoint");
+    }
+    promise.resolve(result);
   }
 
   @Override
@@ -933,20 +958,31 @@ public class NavModule extends NativeNavModuleSpec
 
   @Override
   public void startUpdatingLocation(final Promise promise) {
-    registerLocationListener();
     mIsListeningRoadSnappedLocation = true;
-    promise.resolve(null);
+    // Register listener on UI thread to serialize with callback dispatch and allow
+    // safe remove-and-recreate.
+    UiThreadUtil.runOnUiThread(
+        () -> {
+          registerLocationListener();
+          promise.resolve(null);
+        });
   }
 
   @Override
   public void stopUpdatingLocation(final Promise promise) {
     mIsListeningRoadSnappedLocation = false;
-    removeLocationListener();
-    promise.resolve(null);
+    // Remove the listener on UI thread to serialize with callback dispatch.
+    // This avoids the race condition in the Navigation SDK.
+    UiThreadUtil.runOnUiThread(
+        () -> {
+          removeLocationListener();
+          promise.resolve(null);
+        });
   }
 
   private void registerLocationListener() {
-    // Unregister existing location listener if available.
+    // Remove existing listener first, then recreate. This is safe when called
+    // from UI thread as it serializes with callback dispatch.
     removeLocationListener();
 
     if (mRoadSnappedLocationProvider != null) {
