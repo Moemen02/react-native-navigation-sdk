@@ -142,6 +142,15 @@ To set up, specify your API key in the application delegate `ios/Runner/AppDeleg
 
 ```
 
+#### Add the correct background modes to Info.plist file
+```xml
+<key>UIBackgroundModes</key>
+<array>
+    <string>location</string>
+    <string>audio</string>
+</array>
+```
+
 ## Usage
 
 ### Initializing Navigation
@@ -699,7 +708,6 @@ setOnArrival(null);
 | `setOnRawLocationChanged`             | `{ location: Location }`                              | Called when raw GPS location changes            |
 | `setOnNavigationReady`                | `void`                                                | Called when navigation is ready                 |
 | `setOnNavigationInitError`            | `{ errorCode: NavigationInitErrorCode }`              | Called when navigation initialization fails     |
-| `setOnRouteStatusResult`              | `RouteStatus`                                         | Called with route calculation status            |
 | `setOnRouteChanged`                   | `void`                                                | Called when the route changes                   |
 | `setOnReroutingRequestedByOffRoute`   | `void`                                                | Called when rerouting is triggered by off-route |
 | `setOnTrafficUpdated`                 | `void`                                                | Called when traffic data is updated             |

@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.16.2](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.16.1...v0.16.2) (2026-06-10)
+
+
+### Features
+
+* add marker rotation anchor support ([#608](https://github.com/googlemaps/react-native-navigation-sdk/issues/608)) ([4372c96](https://github.com/googlemaps/react-native-navigation-sdk/commit/4372c96c24a6019bc80fdd50d74155997f93b3f2))
+
+## [0.16.1](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.16.0...v0.16.1) (2026-05-25)
+
+
+### Features
+
+* upgrade Android SDK to 7.6.1 ([#601](https://github.com/googlemaps/react-native-navigation-sdk/issues/601)) ([fee8ad9](https://github.com/googlemaps/react-native-navigation-sdk/commit/fee8ad927fd244ae3abd55f9b3f58c8d450cb6be))
+* upgrade iOS SDK to 10.13.0 ([#602](https://github.com/googlemaps/react-native-navigation-sdk/issues/602)) ([6ec3ab6](https://github.com/googlemaps/react-native-navigation-sdk/commit/6ec3ab6c89929d506236cfc34e114ecdc48051b7))
+
+## [0.16.0](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.15.3...v0.16.0) (2026-05-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* speedLimitIconEnabled and speedometerEnabled prop value now defaults to false to match the platform SDK implementations.
+
+### Bug Fixes
+
+* change the fabric codegen defaults to match the native SDKs ([#596](https://github.com/googlemaps/react-native-navigation-sdk/issues/596)) ([420a5fe](https://github.com/googlemaps/react-native-navigation-sdk/commit/420a5fe2952eab5243f2f97a9f119826e418e054))
+
+## [0.15.3](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.15.2...v0.15.3) (2026-05-19)
+
+
+### Bug Fixes
+
+* prop handling on native Android implementation ([#592](https://github.com/googlemaps/react-native-navigation-sdk/issues/592)) ([931f23c](https://github.com/googlemaps/react-native-navigation-sdk/commit/931f23c456c4368f201b5bc7cce885fb27bf0e1d))
+
 ## [0.15.2](https://github.com/googlemaps/react-native-navigation-sdk/compare/v0.15.1...v0.15.2) (2026-05-03)
 
 
